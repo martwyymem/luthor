@@ -29,8 +29,8 @@
 
 ## screenshots
 
-![lut studio light mode screenshot](screenshots/light.png)
-![lut studio dark mode screenshot](screenshots/dark.png)
+![lut studio light mode screenshot](screenshots/lightmode.png)
+![lut studio dark mode screenshot](screenshots/darkmode.png)
 
 ---
 
