@@ -1,420 +1,401 @@
+// imagestuff.js
+
+// ------------------------------
+// theme manager
+// ------------------------------
 class ThemeManager {
   constructor() {
     this.currentTheme = localStorage.getItem('theme') || 'system';
-    this.themeToggle = document.getElementById('themeToggle');
-    this.themeIndicator = document.getElementById('themeIndicator');
-    
+    this.toggleEl = document.getElementById('themeToggle');
+    this.indicator = document.getElementById('themeIndicator');
     this.initializeTheme();
-    this.setupEventListeners();
+    this.setupListeners();
   }
 
   initializeTheme() {
-    // Set initial theme
-    this.applyTheme(this.currentTheme);
-    this.updateThemeIndicator();
-    
-    // Listen for system theme changes
+    this.apply(this.currentTheme);
+    this.updateIndicator();
     if (window.matchMedia) {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      mediaQuery.addEventListener('change', () => {
-        if (this.currentTheme === 'system') {
-          this.applyTheme('system');
-        }
-      });
+      window
+        .matchMedia('(prefers-color-scheme: dark)')
+        .addEventListener('change', () => {
+          if (this.currentTheme === 'system') {
+            this.apply('system');
+          }
+        });
     }
   }
 
-  setupEventListeners() {
-    if (this.themeToggle) {
-      this.themeToggle.addEventListener('click', (e) => {
-        const themeOption = e.target.closest('.theme-option');
-        if (themeOption) {
-          const theme = themeOption.dataset.theme;
-          this.setTheme(theme);
-        }
-      });
-    }
+  setupListeners() {
+    if (!this.toggleEl) return;
+    this.toggleEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.theme-option');
+      if (!btn) return;
+      this.set(btn.dataset.theme);
+    });
   }
 
-  setTheme(theme) {
+  set(theme) {
     this.currentTheme = theme;
     localStorage.setItem('theme', theme);
-    this.applyTheme(theme);
-    this.updateThemeIndicator();
+    this.apply(theme);
+    this.updateIndicator();
   }
 
-  applyTheme(theme) {
+  apply(theme) {
     document.documentElement.setAttribute('data-theme', theme);
   }
 
-  updateThemeIndicator() {
-    // Remove active class from all options
-    const allOptions = this.themeToggle.querySelectorAll('.theme-option');
-    allOptions.forEach(option => option.classList.remove('active'));
-    
-    // Add active class to current theme
-    const activeOption = this.themeToggle.querySelector(`[data-theme="${this.currentTheme}"]`);
-    if (activeOption) {
-      activeOption.classList.add('active');
-      
-      // Move indicator
-      const index = Array.from(allOptions).indexOf(activeOption);
-      const indicatorPosition = index * 40 + 4; // 40px width + 4px padding
-      this.themeIndicator.style.transform = `translateX(${indicatorPosition}px)`;
-    }
+  updateIndicator() {
+    const opts = Array.from(
+      this.toggleEl.querySelectorAll('.theme-option')
+    );
+    opts.forEach((o) => o.classList.remove('active'));
+    const active = this.toggleEl.querySelector(
+      `.theme-option[data-theme="${this.currentTheme}"]`
+    );
+    if (!active) return;
+    active.classList.add('active');
+    const idx = opts.indexOf(active);
+    const x = idx * 40 + 4; // 40px step + 4px padding
+    this.indicator.style.transform = `translateX(${x}px)`;
   }
 }
 
+// ------------------------------
+// lut processor
+// ------------------------------
 class LUTProcessor {
   constructor() {
     this.imageFile = null;
     this.lutFile = null;
     this.lutData = null;
-    this.canvas = document.getElementById('resultCanvas');
-    this.ctx = this.canvas.getContext('2d');
-
-    // Fixed: Initialize both file states
     this.hasValidImage = false;
     this.hasValidLUT = false;
-
-    this.initializeEventListeners();
+    this.axisOrder = 'bSlowest'; // default ordering
+    this.canvas = document.getElementById('resultCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.initializeListeners();
     this.setupDragAndDrop();
   }
 
-  initializeEventListeners() {
-    const imageInput = document.getElementById('imageInput');
-    const lutInput = document.getElementById('lutInput');
-    const processBtn = document.getElementById('processBtn');
+  // set up file inputs & buttons
+  initializeListeners() {
+    const imgIn = document.getElementById('imageInput');
+    const lutIn = document.getElementById('lutInput');
+    const procBtn = document.getElementById('processBtn');
     const helpFab = document.getElementById('helpFab');
 
-    if (imageInput) {
-      imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
-    }
-    if (lutInput) {
-      lutInput.addEventListener('change', (e) => this.handleLUTUpload(e));
-    }
-    if (processBtn) {
-      processBtn.addEventListener('click', () => this.processImage());
-    }
-    if (helpFab) {
-      helpFab.addEventListener('click', () => this.showHelp());
-    }
-
-    console.log('event listeners initialized');
+    imgIn?.addEventListener('change', (e) => this.onImageChange(e));
+    lutIn?.addEventListener('change', (e) => this.onLUTChange(e));
+    procBtn?.addEventListener('click', () => this.processImage());
+    helpFab?.addEventListener('click', () => this.showHelp());
   }
 
+  // drag + drop zones
   setupDragAndDrop() {
-    const imageUploadArea = document.getElementById('imageUploadArea');
-    const lutUploadArea = document.getElementById('lutUploadArea');
+    const imgArea = document.getElementById('imageUploadArea');
+    const lutArea = document.getElementById('lutUploadArea');
 
-    // Image drag and drop
-    if (imageUploadArea) {
-      this.setupDropZone(imageUploadArea, (files) => {
-        if (files[0] && files[0].type.startsWith('image/')) {
-          this.handleImageFile(files[0]);
-        }
-      });
-    }
-
-    // LUT drag and drop
-    if (lutUploadArea) {
-      this.setupDropZone(lutUploadArea, (files) => {
-        if (files[0] && files[0].name.endsWith('.cube')) {
-          this.handleLUTFile(files[0]);
-        }
-      });
-    }
+    if (imgArea) this.makeDropZone(imgArea, (f) => this.onImageFile(f[0]));
+    if (lutArea) this.makeDropZone(lutArea, (f) => this.onLUTFile(f[0]));
   }
 
-  setupDropZone(element, onDrop) {
-    element.addEventListener('dragover', (e) => {
+  makeDropZone(el, handler) {
+    el.addEventListener('dragover', (e) => {
       e.preventDefault();
-      element.classList.add('drag-over');
+      el.classList.add('drag-over');
     });
-
-    element.addEventListener('dragleave', (e) => {
+    el.addEventListener('dragleave', (e) => {
       e.preventDefault();
-      if (!element.contains(e.relatedTarget)) {
-        element.classList.remove('drag-over');
+      if (!el.contains(e.relatedTarget)) {
+        el.classList.remove('drag-over');
       }
     });
-
-    element.addEventListener('drop', (e) => {
+    el.addEventListener('drop', (e) => {
       e.preventDefault();
-      element.classList.remove('drag-over');
-      onDrop(e.dataTransfer.files);
+      el.classList.remove('drag-over');
+      handler(e.dataTransfer.files);
     });
   }
 
-  handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    this.handleImageFile(file);
+  // file-input handlers
+  onImageChange(evt) {
+    const f = evt.target.files[0];
+    if (f) this.onImageFile(f);
   }
 
-  handleImageFile(file) {
-    console.log('image upload handler called');
-    this.imageFile = file;
-    this.hasValidImage = true; // Fixed: Set flag immediately
-    console.log('image file set:', file.name);
+  onLUTChange(evt) {
+    const f = evt.target.files[0];
+    if (f) this.onLUTFile(f);
+  }
 
-    // Update card state
-    const imageCard = document.getElementById('imageCard');
-    imageCard.classList.add('has-file');
+  onImageFile(file) {
+    if (!file.type.startsWith('image/')) return;
+    this.imageFile = file;
+    this.hasValidImage = true;
+    document.getElementById('imageCard')?.classList.add('has-file');
 
     const preview = document.getElementById('imagePreview');
     preview.innerHTML = '';
-
     const img = document.createElement('img');
     img.src = URL.createObjectURL(file);
     img.onload = () => URL.revokeObjectURL(img.src);
     preview.appendChild(img);
 
-    // Fixed: Update button immediately after setting the flag
     this.updateProcessButton();
   }
 
-  async handleLUTUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    await this.handleLUTFile(file);
-  }
-
-  async handleLUTFile(file) {
-    console.log('lut upload handler called');
+  async onLUTFile(file) {
+    if (!file.name.toLowerCase().endsWith('.cube')) return;
     this.lutFile = file;
-    console.log('lut file set:', file.name);
+    document.getElementById('lutCard')?.classList.add('has-file');
 
-    // Update card state
-    const lutCard = document.getElementById('lutCard');
-    lutCard.classList.add('has-file');
-
+    let text;
     try {
-      const text = await file.text();
-      this.lutData = this.parseLUT(text);
-      this.hasValidLUT = true; // Fixed: Set flag after successful parsing
-      console.log('lut parsed successfully:', this.lutData);
-
-      const info = document.getElementById('lutInfo');
-      info.innerHTML = `
-        <strong>✓ lut loaded successfully</strong><br>
-        <strong>size:</strong> ${this.lutData.size}³<br>
-        <strong>title:</strong> ${this.lutData.title || 'unknown'}<br>
-        <strong>entries:</strong> ${this.lutData.data.length}
-      `;
-    } catch (error) {
-      console.error('error parsing lut:', error);
-      this.hasValidLUT = false; // Fixed: Reset flag on error
-      this.showError('error reading lut file: ' + error.message);
+      text = await file.text();
+    } catch (err) {
+      this.showError('error reading lut file: ' + err.message);
+      this.hasValidLUT = false;
       return;
     }
 
-    // Fixed: Update button after setting the flag
+    try {
+      this.lutData = this.parseLUT(text);
+      this.hasValidLUT = true;
+      this.detectAxisOrder();
+    } catch (err) {
+      this.showError('invalid lut data: ' + err.message);
+      this.hasValidLUT = false;
+      return;
+    }
+
+    const info = document.getElementById('lutInfo');
+    info.innerHTML = `
+      <strong>✓ lut loaded successfully</strong><br>
+      <strong>size:</strong> ${this.lutData.size}³<br>
+      <strong>title:</strong> ${this.lutData.title || 'unknown'}<br>
+      <strong>entries:</strong> ${this.lutData.data.length}
+    `;
     this.updateProcessButton();
   }
 
+  // parse .cube text, including 1d/3d size, domain min/max
   parseLUT(text) {
-    const lines = text.split('\n').map((line) => line.trim());
-    let size = 33; // Default size
-    let title = '';
+    const lines = text.split('\n').map((l) => l.trim());
+    let size = 33,
+      title = '',
+      domainMin = { r: 0, g: 0, b: 0 },
+      domainMax = { r: 1, g: 1, b: 1 };
     const data = [];
 
     for (let line of lines) {
-      if (line.startsWith('#')) continue; // Skip comments
-      if (line === '') continue; // Skip empty lines
-
-      if (line.startsWith('TITLE')) {
-        title = line.substring(5).trim().replace(/"/g, '');
-      } else if (line.startsWith('LUT_3D_SIZE')) {
-        size = parseInt(line.split(' ')[1]);
-      } else if (line.match(/^[\d\.\-\s]+$/)) {
-        // Data line with RGB values (including negative numbers)
-        const values = line.split(/\s+/).filter((v) => v !== '');
-        if (values.length >= 3) {
-          data.push({
-            r: parseFloat(values[0]),
-            g: parseFloat(values[1]),
-            b: parseFloat(values[2]),
-          });
-        }
+      if (!line || line.startsWith('#')) continue;
+      const p = line.split(/\s+/);
+      if (p[0] === 'TITLE') {
+        title = line.substring(5).replace(/"/g, '');
+      } else if (p[0] === 'LUT_3D_SIZE') {
+        size = parseInt(p[1]);
+      } else if (p[0] === 'DOMAIN_MIN') {
+        domainMin = { r: +p[1], g: +p[2], b: +p[3] };
+      } else if (p[0] === 'DOMAIN_MAX') {
+        domainMax = { r: +p[1], g: +p[2], b: +p[3] };
+      } else if (p.length === 3 && p.every((v) => /^-?[\d.]+$/.test(v))) {
+        data.push({ r: +p[0], g: +p[1], b: +p[2] });
       }
     }
 
-    console.log(`lut parsing: expected ${size}³ = ${size * size * size} entries, got ${data.length}`);
-
     if (data.length !== size * size * size) {
       throw new Error(
-        `invalid lut data. expected ${
-          size * size * size
-        } entries, got ${data.length}`
+        `expected ${size ** 3} color entries, got ${data.length}`
       );
     }
 
-    return { size, title, data };
+    return { size, title, data, domainMin, domainMax };
+  }
+
+  // automatically pick correct axis ordering by testing white => white
+  detectAxisOrder() {
+    const { size, data, domainMin, domainMax } = this.lutData;
+
+    const clamp = (v) => Math.max(0, Math.min(1, v));
+    const sampleErr = (order) => {
+      // map white
+      let r = 1,
+        g = 1,
+        b = 1;
+      // domain remap
+      r = domainMin.r + r * (domainMax.r - domainMin.r);
+      g = domainMin.g + g * (domainMax.g - domainMin.g);
+      b = domainMin.b + b * (domainMax.b - domainMin.b);
+      r = clamp(r);
+      g = clamp(g);
+      b = clamp(b);
+      // to grid
+      const lr = r * (size - 1),
+        lg = g * (size - 1),
+        lb = b * (size - 1);
+      const r0 = Math.floor(lr),
+        g0 = Math.floor(lg),
+        b0 = Math.floor(lb);
+      const r1 = Math.min(size - 1, r0 + 1),
+        g1 = Math.min(size - 1, g0 + 1),
+        b1 = Math.min(size - 1, b0 + 1);
+      const rf = lr - r0,
+        gf = lg - g0,
+        bf = lb - b0;
+
+      const idx = (ri, gi, bi) =>
+        order === 'bSlowest'
+          ? bi * size * size + gi * size + ri
+          : ri * size * size + gi * size + bi;
+
+      const c000 = data[idx(r0, g0, b0)];
+      const c001 = data[idx(r0, g0, b1)];
+      const c010 = data[idx(r0, g1, b0)];
+      const c011 = data[idx(r0, g1, b1)];
+      const c100 = data[idx(r1, g0, b0)];
+      const c101 = data[idx(r1, g0, b1)];
+      const c110 = data[idx(r1, g1, b0)];
+      const c111 = data[idx(r1, g1, b1)];
+
+      const lerp = (a, b, t) => ({
+        r: a.r + t * (b.r - a.r),
+        g: a.g + t * (b.g - a.g),
+        b: a.b + t * (b.b - a.b),
+      });
+
+      const c00 = lerp(c000, c001, bf);
+      const c01 = lerp(c010, c011, bf);
+      const c10 = lerp(c100, c101, bf);
+      const c11 = lerp(c110, c111, bf);
+      const c0 = lerp(c00, c01, gf);
+      const c1 = lerp(c10, c11, gf);
+      const out = lerp(c0, c1, rf);
+
+      // error from perfect white
+      return Math.abs(out.r - 1) + Math.abs(out.g - 1) + Math.abs(out.b - 1);
+    };
+
+    const errB = sampleErr('bSlowest');
+    const errR = sampleErr('rSlowest');
+    this.axisOrder = errR < errB ? 'rSlowest' : 'bSlowest';
   }
 
   updateProcessButton() {
     const btn = document.getElementById('processBtn');
-    // Fixed: Use the reliable flags instead of checking objects
-    const canProcess = this.hasValidImage && this.hasValidLUT;
-    
-    console.log('updating process button:', {
-      hasValidImage: this.hasValidImage,
-      hasValidLUT: this.hasValidLUT,
-      canProcess
-    });
-
-    if (btn) {
-      btn.disabled = !canProcess;
-    }
+    if (btn) btn.disabled = !(this.hasValidImage && this.hasValidLUT);
   }
 
   async processImage() {
-    console.log('processing image...');
-    if (!this.hasValidImage || !this.hasValidLUT) {
-      console.error('missing image or lut data');
-      return;
-    }
-
-    const progressContainer = document.getElementById('progressContainer');
-    if (progressContainer) {
-      progressContainer.style.display = 'block';
-    }
+    if (!this.hasValidImage || !this.hasValidLUT) return;
+    document.getElementById('progressContainer').style.display = 'block';
 
     try {
-      // Load image
       const img = await this.loadImage(this.imageFile);
-      console.log('image loaded:', img.width, 'x', img.height);
-
-      // Set canvas size
       this.canvas.width = img.width;
       this.canvas.height = img.height;
-
-      // Draw original image
       this.ctx.drawImage(img, 0, 0);
-
-      // Get image data
       const imageData = this.ctx.getImageData(
         0,
         0,
         this.canvas.width,
         this.canvas.height
       );
-
-      // Apply LUT
-      console.log('applying lut...');
-      this.applyLUTToImageData(imageData);
-
-      // Put processed data back
+      this.applyLUT(imageData);
       this.ctx.putImageData(imageData, 0, 0);
-
-      // Show result
-      const resultSection = document.getElementById('resultSection');
-      if (resultSection) {
-        resultSection.style.display = 'block';
-        resultSection.scrollIntoView({ behavior: 'smooth' });
-      }
-
-      // Auto-download
+      document.getElementById('resultSection').style.display = 'block';
+      document
+        .getElementById('resultSection')
+        .scrollIntoView({ behavior: 'smooth' });
       this.downloadImage();
-    } catch (error) {
-      console.error('error processing image:', error);
-      this.showError('error processing image: ' + error.message);
+    } catch (err) {
+      this.showError('error processing image: ' + err.message);
     } finally {
-      if (progressContainer) {
-        progressContainer.style.display = 'none';
-      }
+      document.getElementById('progressContainer').style.display = 'none';
     }
   }
 
   loadImage(file) {
-    return new Promise((resolve, reject) => {
+    return new Promise((res, rej) => {
       const img = new Image();
       img.onload = () => {
         URL.revokeObjectURL(img.src);
-        resolve(img);
+        res(img);
       };
-      img.onerror = reject;
+      img.onerror = rej;
       img.src = URL.createObjectURL(file);
     });
   }
 
-  applyLUTToImageData(imageData) {
-    const data = imageData.data;
-    const lutSize = this.lutData.size;
-    const lutData = this.lutData.data;
+  applyLUT(imageData) {
+    const d = imageData.data;
+    const { size, data: lutData, domainMin, domainMax } = this.lutData;
+    const clamp = (v) => Math.max(0, Math.min(1, v));
 
-    for (let i = 0; i < data.length; i += 4) {
-      // Normalize RGB values to 0-1 range
-      let r = data[i] / 255;
-      let g = data[i + 1] / 255;
-      let b = data[i + 2] / 255;
+    const idxFn = (ri, gi, bi) =>
+      this.axisOrder === 'bSlowest'
+        ? bi * size * size + gi * size + ri
+        : ri * size * size + gi * size + bi;
 
-      // Apply LUT
-      const result = this.interpolateLUT(r, g, b, lutSize, lutData);
-
-      // Convert back to 0-255 range and clamp
-      data[i] = Math.max(0, Math.min(255, Math.round(result.r * 255)));
-      data[i + 1] = Math.max(0, Math.min(255, Math.round(result.g * 255)));
-      data[i + 2] = Math.max(0, Math.min(255, Math.round(result.b * 255)));
-      // Alpha channel remains unchanged
-    }
-  }
-
-  interpolateLUT(r, g, b, size, lutData) {
-    // Clamp values
-    r = Math.max(0, Math.min(1, r));
-    g = Math.max(0, Math.min(1, g));
-    b = Math.max(0, Math.min(1, b));
-
-    // Scale to LUT coordinates
-    const lutR = r * (size - 1);
-    const lutG = g * (size - 1);
-    const lutB = b * (size - 1);
-
-    // Get integer and fractional parts
-    const rFloor = Math.floor(lutR);
-    const gFloor = Math.floor(lutG);
-    const bFloor = Math.floor(lutB);
-
-    const rCeil = Math.min(size - 1, rFloor + 1);
-    const gCeil = Math.min(size - 1, gFloor + 1);
-    const bCeil = Math.min(size - 1, bFloor + 1);
-
-    const rFrac = lutR - rFloor;
-    const gFrac = lutG - gFloor;
-    const bFrac = lutB - bFloor;
-
-    // Get the 8 corner values for trilinear interpolation
-    const getIndex = (r, g, b) => r * size * size + g * size + b;
-
-    const c000 = lutData[getIndex(rFloor, gFloor, bFloor)];
-    const c001 = lutData[getIndex(rFloor, gFloor, bCeil)];
-    const c010 = lutData[getIndex(rFloor, gCeil, bFloor)];
-    const c011 = lutData[getIndex(rFloor, gCeil, bCeil)];
-    const c100 = lutData[getIndex(rCeil, gFloor, bFloor)];
-    const c101 = lutData[getIndex(rCeil, gFloor, bCeil)];
-    const c110 = lutData[getIndex(rCeil, gCeil, bFloor)];
-    const c111 = lutData[getIndex(rCeil, gCeil, bCeil)];
-
-    // Trilinear interpolation
-    const c00 = this.lerp(c000, c001, bFrac);
-    const c01 = this.lerp(c010, c011, bFrac);
-    const c10 = this.lerp(c100, c101, bFrac);
-    const c11 = this.lerp(c110, c111, bFrac);
-
-    const c0 = this.lerp(c00, c01, gFrac);
-    const c1 = this.lerp(c10, c11, gFrac);
-
-    return this.lerp(c0, c1, rFrac);
-  }
-
-  lerp(a, b, t) {
-    return {
+    const lerp = (a, b, t) => ({
       r: a.r + t * (b.r - a.r),
       g: a.g + t * (b.g - a.g),
       b: a.b + t * (b.b - a.b),
-    };
+    });
+
+    for (let i = 0; i < d.length; i += 4) {
+      // normalize pixel
+      let r = d[i] / 255;
+      let g = d[i + 1] / 255;
+      let b = d[i + 2] / 255;
+
+      // domain remap
+      r = domainMin.r + r * (domainMax.r - domainMin.r);
+      g = domainMin.g + g * (domainMax.g - domainMin.g);
+      b = domainMin.b + b * (domainMax.b - domainMin.b);
+      r = clamp(r);
+      g = clamp(g);
+      b = clamp(b);
+
+      // to grid coords
+      const lr = r * (size - 1),
+        lg = g * (size - 1),
+        lb = b * (size - 1);
+      const r0 = Math.floor(lr),
+        g0 = Math.floor(lg),
+        b0 = Math.floor(lb);
+      const r1 = Math.min(size - 1, r0 + 1),
+        g1 = Math.min(size - 1, g0 + 1),
+        b1 = Math.min(size - 1, b0 + 1);
+      const rf = lr - r0,
+        gf = lg - g0,
+        bf = lb - b0;
+
+      // sample corners
+      const c000 = lutData[idxFn(r0, g0, b0)];
+      const c001 = lutData[idxFn(r0, g0, b1)];
+      const c010 = lutData[idxFn(r0, g1, b0)];
+      const c011 = lutData[idxFn(r0, g1, b1)];
+      const c100 = lutData[idxFn(r1, g0, b0)];
+      const c101 = lutData[idxFn(r1, g0, b1)];
+      const c110 = lutData[idxFn(r1, g1, b0)];
+      const c111 = lutData[idxFn(r1, g1, b1)];
+
+      // trilinear interp
+      const c00 = lerp(c000, c001, bf);
+      const c01 = lerp(c010, c011, bf);
+      const c10 = lerp(c100, c101, bf);
+      const c11 = lerp(c110, c111, bf);
+      const c0 = lerp(c00, c01, gf);
+      const c1 = lerp(c10, c11, gf);
+      const out = lerp(c0, c1, rf);
+
+      d[i] = Math.round(out.r * 255);
+      d[i + 1] = Math.round(out.g * 255);
+      d[i + 2] = Math.round(out.b * 255);
+      // alpha unchanged
+    }
   }
 
   downloadImage() {
@@ -426,41 +407,35 @@ class LUTProcessor {
     document.body.removeChild(link);
   }
 
-  showError(message) {
-    // Simple error display - you could enhance this with a Material snackbar
-    alert(message);
+  showError(msg) {
+    alert(msg);
   }
 
   showHelp() {
-    const helpText = `
-luthor help:
+    alert(`
+lut studio help:
 
 🎨 theme options:
 • light mode: clean light interface
 • dark mode: easy on the eyes
-• system: follows your device settings
+• system: follows your device
 
 📁 how to use:
 1. upload an image (jpeg, png, webp)
 2. upload a .cube lut file
-3. click "apply lut & download" to process
-4. your processed image will download automatically
+3. click "apply lut & download"
+4. your processed image will download
 
 🎞️ about luts:
-lut (look-up table) files contain color grading information used in professional video and photo editing.
-
-supported formats:
-• images: jpeg, png, webp
-• lut: .cube format
-    `;
-    
-    alert(helpText);
+lut (look-up table) files contain color grading data.
+    `);
   }
 }
 
-// Initialize the application when DOM is loaded
+// ------------------------------
+// initialize on dom ready
+// ------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('dom loaded, initializing applications...');
   new ThemeManager();
   new LUTProcessor();
 });
