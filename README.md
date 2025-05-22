@@ -1,6 +1,6 @@
 # luthor
 
-**luthor** is a modern, material you-inspired web app for applying 3D LUTs (`.cube` files) to images directly in your browser. It features a beautiful, responsive UI, light/dark/system theme support, and instant image processing and download—all with no server or account required.
+**luthor** is a modern, material you-inspired web app for applying 3D LUTs (`.cube` files) to images directly in your browser. It features light/dark/system theme support, and instant image processing and download—all with no server or account required.
 
 ---
 
