@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>luthor</title>
+    <link rel="stylesheet" href="main.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Top App Bar -->
+      <header class="top-app-bar">
+        <div class="app-bar-content">
+          <div class="app-bar-start">
+            <span class="material-symbols-outlined app-icon">palette</span>
+            <div class="app-title">
+              <h1>luthor</h1>
+              <p>color grading for your images</p>
+            </div>
+          </div>
+          
+          <!-- Theme Toggle -->
+          <div class="theme-toggle-container">
+            <div class="theme-toggle" id="themeToggle">
+              <button class="theme-option" data-theme="light" title="light theme">
+                <span class="material-symbols-outlined">light_mode</span>
+              </button>
+              <button class="theme-option" data-theme="system" title="system theme">
+                <span class="material-symbols-outlined">computer</span>
+              </button>
+              <button class="theme-option" data-theme="dark" title="dark theme">
+                <span class="material-symbols-outlined">dark_mode</span>
+              </button>
+              <div class="theme-indicator" id="themeIndicator"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="content-grid">
+          <!-- Upload Cards -->
+          <div class="upload-cards">
+            <!-- Image Upload Card -->
+            <div class="card upload-card" id="imageCard">
+              <div class="card-header">
+                <span class="material-symbols-outlined">image</span>
+                <div class="card-title">
+                  <h3>upload image</h3>
+                  <p>jpeg, png, webp supported</p>
+                </div>
+              </div>
+              
+              <div class="upload-area" id="imageUploadArea">
+                <input
+                  type="file"
+                  id="imageInput"
+                  accept="image/*"
+                  class="file-input"
+                />
+                <label for="imageInput" class="upload-label">
+                  <span class="material-symbols-outlined upload-icon">
+                    cloud_upload
+                  </span>
+                  <span class="upload-text">choose image file</span>
+                </label>
+              </div>
+              
+              <div class="preview-container" id="imagePreview"></div>
+            </div>
+
+            <!-- LUT Upload Card -->
+            <div class="card upload-card" id="lutCard">
+              <div class="card-header">
+                <span class="material-symbols-outlined">tune</span>
+                <div class="card-title">
+                  <h3>upload lut</h3>
+                  <p>.cube format required</p>
+                </div>
+              </div>
+              
+              <div class="upload-area" id="lutUploadArea">
+                <input
+                  type="file"
+                  id="lutInput"
+                  accept=".cube"
+                  class="file-input"
+                />
+                <label for="lutInput" class="upload-label">
+                  <span class="material-symbols-outlined upload-icon">
+                    description
+                  </span>
+                  <span class="upload-text">choose .cube file</span>
+                </label>
+              </div>
+              
+              <div class="lut-info" id="lutInfo"></div>
+            </div>
+          </div>
+
+          <!-- Process Section -->
+          <div class="process-section">
+            <div class="card process-card">
+              <div class="process-header">
+                <h3>color grading</h3>
+                <p>apply your lut to transform the image colors</p>
+              </div>
+              
+              <div class="process-actions">
+                <button id="processBtn" class="btn-primary" disabled>
+                  <span class="material-symbols-outlined">auto_fix_high</span>
+                  apply lut & download
+                </button>
+              </div>
+              
+              <div class="progress-container" id="progressContainer">
+                <div class="progress-track">
+                  <div class="progress-indicator" id="progressIndicator"></div>
+                </div>
+                <p class="progress-text">processing your image...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Result Section -->
+          <div class="result-section" id="resultSection">
+            <div class="card result-card">
+              <div class="card-header">
+                <span class="material-symbols-outlined">done_all</span>
+                <div class="card-title">
+                  <h3>processed image</h3>
+                  <p>your color-graded result</p>
+                </div>
+              </div>
+              <div class="result-container">
+                <canvas id="resultCanvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Floating Action Button -->
+      <button class="fab" id="helpFab" title="help & info">
+        <span class="material-symbols-outlined">help</span>
+      </button>
+    </div>
+
+    <script src="imagestuff.js"></script>
+  </body>
+</html>
