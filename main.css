@@ -4,17 +4,14 @@
   --md-sys-color-on-primary-light: #ffffff;
   --md-sys-color-primary-container-light: #eaddff;
   --md-sys-color-on-primary-container-light: #21005d;
-  
   --md-sys-color-secondary-light: #625b71;
   --md-sys-color-on-secondary-light: #ffffff;
   --md-sys-color-secondary-container-light: #e8def8;
   --md-sys-color-on-secondary-container-light: #1d192b;
-  
   --md-sys-color-tertiary-light: #7d5260;
   --md-sys-color-on-tertiary-light: #ffffff;
   --md-sys-color-tertiary-container-light: #ffd8e4;
   --md-sys-color-on-tertiary-container-light: #31111d;
-  
   --md-sys-color-surface-light: #fef7ff;
   --md-sys-color-surface-dim-light: #ded8e1;
   --md-sys-color-surface-bright-light: #fef7ff;
@@ -25,10 +22,8 @@
   --md-sys-color-surface-container-highest-light: #e6e0e9;
   --md-sys-color-on-surface-light: #1c1b1f;
   --md-sys-color-on-surface-variant-light: #49454f;
-  
   --md-sys-color-outline-light: #79747e;
   --md-sys-color-outline-variant-light: #cab6cf;
-  
   --md-sys-color-error-light: #ba1a1a;
   --md-sys-color-on-error-light: #ffffff;
   --md-sys-color-error-container-light: #ffdad6;
@@ -39,17 +34,14 @@
   --md-sys-color-on-primary-dark: #381e72;
   --md-sys-color-primary-container-dark: #4f378b;
   --md-sys-color-on-primary-container-dark: #eaddff;
-  
   --md-sys-color-secondary-dark: #ccc2dc;
   --md-sys-color-on-secondary-dark: #332d41;
   --md-sys-color-secondary-container-dark: #4a4458;
   --md-sys-color-on-secondary-container-dark: #e8def8;
-  
   --md-sys-color-tertiary-dark: #efb8c8;
   --md-sys-color-on-tertiary-dark: #492532;
   --md-sys-color-tertiary-container-dark: #633b48;
   --md-sys-color-on-tertiary-container-dark: #ffd8e4;
-  
   --md-sys-color-surface-dark: #1c1b1f;
   --md-sys-color-surface-dim-dark: #1c1b1f;
   --md-sys-color-surface-bright-dark: #3b383e;
@@ -60,10 +52,8 @@
   --md-sys-color-surface-container-highest-dark: #36343b;
   --md-sys-color-on-surface-dark: #e6e0e9;
   --md-sys-color-on-surface-variant-dark: #cab6cf;
-  
   --md-sys-color-outline-dark: #938f99;
   --md-sys-color-outline-variant-dark: #49454f;
-  
   --md-sys-color-error-dark: #ffb4ab;
   --md-sys-color-on-error-dark: #690005;
   --md-sys-color-error-container-dark: #93000a;
@@ -74,17 +64,14 @@
   --md-sys-color-on-primary: var(--md-sys-color-on-primary-light);
   --md-sys-color-primary-container: var(--md-sys-color-primary-container-light);
   --md-sys-color-on-primary-container: var(--md-sys-color-on-primary-container-light);
-  
   --md-sys-color-secondary: var(--md-sys-color-secondary-light);
   --md-sys-color-on-secondary: var(--md-sys-color-on-secondary-light);
   --md-sys-color-secondary-container: var(--md-sys-color-secondary-container-light);
   --md-sys-color-on-secondary-container: var(--md-sys-color-on-secondary-container-light);
-  
   --md-sys-color-tertiary: var(--md-sys-color-tertiary-light);
   --md-sys-color-on-tertiary: var(--md-sys-color-on-tertiary-light);
   --md-sys-color-tertiary-container: var(--md-sys-color-tertiary-container-light);
   --md-sys-color-on-tertiary-container: var(--md-sys-color-on-tertiary-container-light);
-  
   --md-sys-color-surface: var(--md-sys-color-surface-light);
   --md-sys-color-surface-dim: var(--md-sys-color-surface-dim-light);
   --md-sys-color-surface-bright: var(--md-sys-color-surface-bright-light);
@@ -95,15 +82,13 @@
   --md-sys-color-surface-container-highest: var(--md-sys-color-surface-container-highest-light);
   --md-sys-color-on-surface: var(--md-sys-color-on-surface-light);
   --md-sys-color-on-surface-variant: var(--md-sys-color-on-surface-variant-light);
-  
   --md-sys-color-outline: var(--md-sys-color-outline-light);
   --md-sys-color-outline-variant: var(--md-sys-color-outline-variant-light);
-  
   --md-sys-color-error: var(--md-sys-color-error-light);
   --md-sys-color-on-error: var(--md-sys-color-on-error-light);
   --md-sys-color-error-container: var(--md-sys-color-error-container-light);
   --md-sys-color-on-error-container: var(--md-sys-color-on-error-container-light);
-  
+
   /* Elevation */
   --md-sys-elevation-level0: 0px 0px 0px 0px rgba(0, 0, 0, 0.2);
   --md-sys-elevation-level1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 
@@ -116,28 +101,23 @@
                              0px 6px 10px 4px rgba(0, 0, 0, 0.15);
   --md-sys-elevation-level5: 0px 4px 4px 0px rgba(0, 0, 0, 0.3), 
                              0px 8px 12px 6px rgba(0, 0, 0, 0.15);
-  
+
   /* Typography */
   --md-sys-typescale-display-large-font: Roboto;
   --md-sys-typescale-display-large-size: 57px;
   --md-sys-typescale-display-large-weight: 400;
-  
   --md-sys-typescale-headline-large-font: Roboto;
   --md-sys-typescale-headline-large-size: 32px;
   --md-sys-typescale-headline-large-weight: 400;
-  
   --md-sys-typescale-title-large-font: Roboto;
   --md-sys-typescale-title-large-size: 22px;
   --md-sys-typescale-title-large-weight: 400;
-  
   --md-sys-typescale-body-large-font: Roboto;
   --md-sys-typescale-body-large-size: 16px;
   --md-sys-typescale-body-large-weight: 400;
-  
   --md-sys-typescale-body-medium-font: Roboto;
   --md-sys-typescale-body-medium-size: 14px;
   --md-sys-typescale-body-medium-weight: 400;
-  
   --md-sys-typescale-label-large-font: Roboto;
   --md-sys-typescale-label-large-size: 14px;
   --md-sys-typescale-label-large-weight: 500;
@@ -149,17 +129,14 @@
   --md-sys-color-on-primary: var(--md-sys-color-on-primary-dark);
   --md-sys-color-primary-container: var(--md-sys-color-primary-container-dark);
   --md-sys-color-on-primary-container: var(--md-sys-color-on-primary-container-dark);
-  
   --md-sys-color-secondary: var(--md-sys-color-secondary-dark);
   --md-sys-color-on-secondary: var(--md-sys-color-on-secondary-dark);
   --md-sys-color-secondary-container: var(--md-sys-color-secondary-container-dark);
   --md-sys-color-on-secondary-container: var(--md-sys-color-on-secondary-container-dark);
-  
   --md-sys-color-tertiary: var(--md-sys-color-tertiary-dark);
   --md-sys-color-on-tertiary: var(--md-sys-color-on-tertiary-dark);
   --md-sys-color-tertiary-container: var(--md-sys-color-tertiary-container-dark);
   --md-sys-color-on-tertiary-container: var(--md-sys-color-on-tertiary-container-dark);
-  
   --md-sys-color-surface: var(--md-sys-color-surface-dark);
   --md-sys-color-surface-dim: var(--md-sys-color-surface-dim-dark);
   --md-sys-color-surface-bright: var(--md-sys-color-surface-bright-dark);
@@ -170,10 +147,8 @@
   --md-sys-color-surface-container-highest: var(--md-sys-color-surface-container-highest-dark);
   --md-sys-color-on-surface: var(--md-sys-color-on-surface-dark);
   --md-sys-color-on-surface-variant: var(--md-sys-color-on-surface-variant-dark);
-  
   --md-sys-color-outline: var(--md-sys-color-outline-dark);
   --md-sys-color-outline-variant: var(--md-sys-color-outline-variant-dark);
-  
   --md-sys-color-error: var(--md-sys-color-error-dark);
   --md-sys-color-on-error: var(--md-sys-color-on-error-dark);
   --md-sys-color-error-container: var(--md-sys-color-error-container-dark);
@@ -187,17 +162,14 @@
     --md-sys-color-on-primary: var(--md-sys-color-on-primary-dark);
     --md-sys-color-primary-container: var(--md-sys-color-primary-container-dark);
     --md-sys-color-on-primary-container: var(--md-sys-color-on-primary-container-dark);
-    
     --md-sys-color-secondary: var(--md-sys-color-secondary-dark);
     --md-sys-color-on-secondary: var(--md-sys-color-on-secondary-dark);
     --md-sys-color-secondary-container: var(--md-sys-color-secondary-container-dark);
     --md-sys-color-on-secondary-container: var(--md-sys-color-on-secondary-container-dark);
-    
     --md-sys-color-tertiary: var(--md-sys-color-tertiary-dark);
     --md-sys-color-on-tertiary: var(--md-sys-color-on-tertiary-dark);
     --md-sys-color-tertiary-container: var(--md-sys-color-tertiary-container-dark);
     --md-sys-color-on-tertiary-container: var(--md-sys-color-on-tertiary-container-dark);
-    
     --md-sys-color-surface: var(--md-sys-color-surface-dark);
     --md-sys-color-surface-dim: var(--md-sys-color-surface-dim-dark);
     --md-sys-color-surface-bright: var(--md-sys-color-surface-bright-dark);
@@ -208,10 +180,8 @@
     --md-sys-color-surface-container-highest: var(--md-sys-color-surface-container-highest-dark);
     --md-sys-color-on-surface: var(--md-sys-color-on-surface-dark);
     --md-sys-color-on-surface-variant: var(--md-sys-color-on-surface-variant-dark);
-    
     --md-sys-color-outline: var(--md-sys-color-outline-dark);
     --md-sys-color-outline-variant: var(--md-sys-color-outline-variant-dark);
-    
     --md-sys-color-error: var(--md-sys-color-error-dark);
     --md-sys-color-on-error: var(--md-sys-color-on-error-dark);
     --md-sys-color-error-container: var(--md-sys-color-error-container-dark);
@@ -332,13 +302,14 @@ body {
 .theme-indicator {
   position: absolute;
   top: 4px;
-  left: 4px;
-  width: 40px;
+  left: 0;
   height: 32px;
   background-color: var(--md-sys-color-primary-container);
   border-radius: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1;
+  box-shadow: var(--md-sys-elevation-level2);
+  pointer-events: none;
 }
 
 /* Main Content */
@@ -411,7 +382,6 @@ body {
   text-align: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background-color: var(--md-sys-color-surface-container-highest);
-  /* Fixed: Ensure container has stable dimensions */
   min-height: 140px;
   display: flex;
   align-items: center;
@@ -426,7 +396,6 @@ body {
 .upload-area.drag-over {
   border-color: var(--md-sys-color-primary);
   background-color: var(--md-sys-color-primary-container);
-  /* Removed transform scale to prevent jumping */
 }
 
 .file-input {
@@ -441,7 +410,6 @@ body {
   cursor: pointer;
   color: var(--md-sys-color-primary);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Fixed: Use relative positioning to prevent layout shifts */
   position: relative;
 }
 
@@ -455,7 +423,6 @@ body {
   font-weight: var(--md-sys-typescale-label-large-weight);
 }
 
-/* Fixed: Use transform on icon only to prevent layout shifts */
 .upload-label:hover .upload-icon {
   transform: scale(1.1);
 }
@@ -501,6 +468,13 @@ body {
 .process-header p {
   color: var(--md-sys-color-on-surface-variant);
   transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.process-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 
 /* Buttons */
@@ -645,32 +619,25 @@ body {
   .main-content {
     padding: 16px;
   }
-  
   .upload-cards {
     grid-template-columns: 1fr;
   }
-  
   .app-bar-content {
     padding: 0 16px;
   }
-  
   .card {
     padding: 16px;
   }
-  
   .upload-area {
     padding: 24px 16px;
   }
-  
   .fab {
     bottom: 16px;
     right: 16px;
   }
-  
   .app-title h1 {
     font-size: 24px;
   }
-  
   .app-title p {
     display: none;
   }
@@ -680,16 +647,13 @@ body {
   .upload-icon {
     font-size: 36px;
   }
-  
   .btn-primary {
     padding: 12px 24px;
     font-size: 14px;
   }
-  
   .theme-toggle {
     padding: 2px;
   }
-  
   .theme-option {
     padding: 6px 8px;
   }
