@@ -16,7 +16,7 @@
 
 ---
 
-## usage
+## usage (windows, mac, linux etc.)
 
 1. **clone or download this repo**
 2. open `main.html` in your browser (no build step required)
