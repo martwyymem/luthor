@@ -1,8 +1,5 @@
 // imagestuff.js
 
-// ------------------------------
-// theme manager
-// ------------------------------
 class ThemeManager {
   constructor() {
     this.currentTheme = localStorage.getItem('theme') || 'system';
@@ -15,12 +12,17 @@ class ThemeManager {
   initializeTheme() {
     this.apply(this.currentTheme);
     this.updateIndicator();
+    // Fix: ensure indicator is correct after DOM is painted
+    setTimeout(() => this.updateIndicator(), 0);
+    window.addEventListener('load', () => this.updateIndicator());
+    window.addEventListener('resize', () => this.updateIndicator());
     if (window.matchMedia) {
       window
         .matchMedia('(prefers-color-scheme: dark)')
         .addEventListener('change', () => {
           if (this.currentTheme === 'system') {
             this.apply('system');
+            this.updateIndicator();
           }
         });
     }
@@ -47,6 +49,7 @@ class ThemeManager {
   }
 
   updateIndicator() {
+    if (!this.toggleEl || !this.indicator) return;
     const opts = Array.from(
       this.toggleEl.querySelectorAll('.theme-option')
     );
@@ -56,15 +59,15 @@ class ThemeManager {
     );
     if (!active) return;
     active.classList.add('active');
-    const idx = opts.indexOf(active);
-    const x = idx * 40 + 4; // 40px step + 4px padding
-    this.indicator.style.transform = `translateX(${x}px)`;
+    // Dynamically set indicator width and position
+    const rect = active.getBoundingClientRect();
+    const parentRect = this.toggleEl.getBoundingClientRect();
+    this.indicator.style.width = rect.width + 'px';
+    this.indicator.style.left = (rect.left - parentRect.left) + 'px';
+    this.indicator.style.boxShadow = getComputedStyle(active).boxShadow;
   }
 }
 
-// ------------------------------
-// lut processor
-// ------------------------------
 class LUTProcessor {
   constructor() {
     this.imageFile = null;
@@ -72,31 +75,31 @@ class LUTProcessor {
     this.lutData = null;
     this.hasValidImage = false;
     this.hasValidLUT = false;
-    this.axisOrder = 'bSlowest'; // default ordering
+    this.axisOrder = 'bSlowest';
     this.canvas = document.getElementById('resultCanvas');
     this.ctx = this.canvas.getContext('2d');
+    this.resultReady = false;
     this.initializeListeners();
     this.setupDragAndDrop();
   }
 
-  // set up file inputs & buttons
   initializeListeners() {
     const imgIn = document.getElementById('imageInput');
     const lutIn = document.getElementById('lutInput');
-    const procBtn = document.getElementById('processBtn');
+    const applyBtn = document.getElementById('applyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
     const helpFab = document.getElementById('helpFab');
 
     imgIn?.addEventListener('change', (e) => this.onImageChange(e));
     lutIn?.addEventListener('change', (e) => this.onLUTChange(e));
-    procBtn?.addEventListener('click', () => this.processImage());
+    applyBtn?.addEventListener('click', () => this.processImage());
+    downloadBtn?.addEventListener('click', () => this.downloadImage());
     helpFab?.addEventListener('click', () => this.showHelp());
   }
 
-  // drag + drop zones
   setupDragAndDrop() {
     const imgArea = document.getElementById('imageUploadArea');
     const lutArea = document.getElementById('lutUploadArea');
-
     if (imgArea) this.makeDropZone(imgArea, (f) => this.onImageFile(f[0]));
     if (lutArea) this.makeDropZone(lutArea, (f) => this.onLUTFile(f[0]));
   }
@@ -119,7 +122,6 @@ class LUTProcessor {
     });
   }
 
-  // file-input handlers
   onImageChange(evt) {
     const f = evt.target.files[0];
     if (f) this.onImageFile(f);
@@ -134,23 +136,22 @@ class LUTProcessor {
     if (!file.type.startsWith('image/')) return;
     this.imageFile = file;
     this.hasValidImage = true;
+    this.resultReady = false;
     document.getElementById('imageCard')?.classList.add('has-file');
-
     const preview = document.getElementById('imagePreview');
     preview.innerHTML = '';
     const img = document.createElement('img');
     img.src = URL.createObjectURL(file);
     img.onload = () => URL.revokeObjectURL(img.src);
     preview.appendChild(img);
-
-    this.updateProcessButton();
+    this.updateProcessButtons();
   }
 
   async onLUTFile(file) {
     if (!file.name.toLowerCase().endsWith('.cube')) return;
     this.lutFile = file;
+    this.resultReady = false;
     document.getElementById('lutCard')?.classList.add('has-file');
-
     let text;
     try {
       text = await file.text();
@@ -159,7 +160,6 @@ class LUTProcessor {
       this.hasValidLUT = false;
       return;
     }
-
     try {
       this.lutData = this.parseLUT(text);
       this.hasValidLUT = true;
@@ -169,7 +169,6 @@ class LUTProcessor {
       this.hasValidLUT = false;
       return;
     }
-
     const info = document.getElementById('lutInfo');
     info.innerHTML = `
       <strong>✓ lut loaded successfully</strong><br>
@@ -177,10 +176,9 @@ class LUTProcessor {
       <strong>title:</strong> ${this.lutData.title || 'unknown'}<br>
       <strong>entries:</strong> ${this.lutData.data.length}
     `;
-    this.updateProcessButton();
+    this.updateProcessButtons();
   }
 
-  // parse .cube text, including 1d/3d size, domain min/max
   parseLUT(text) {
     const lines = text.split('\n').map((l) => l.trim());
     let size = 33,
@@ -188,7 +186,6 @@ class LUTProcessor {
       domainMin = { r: 0, g: 0, b: 0 },
       domainMax = { r: 1, g: 1, b: 1 };
     const data = [];
-
     for (let line of lines) {
       if (!line || line.startsWith('#')) continue;
       const p = line.split(/\s+/);
@@ -204,34 +201,23 @@ class LUTProcessor {
         data.push({ r: +p[0], g: +p[1], b: +p[2] });
       }
     }
-
     if (data.length !== size * size * size) {
       throw new Error(
         `expected ${size ** 3} color entries, got ${data.length}`
       );
     }
-
     return { size, title, data, domainMin, domainMax };
   }
 
-  // automatically pick correct axis ordering by testing white => white
   detectAxisOrder() {
     const { size, data, domainMin, domainMax } = this.lutData;
-
     const clamp = (v) => Math.max(0, Math.min(1, v));
     const sampleErr = (order) => {
-      // map white
-      let r = 1,
-        g = 1,
-        b = 1;
-      // domain remap
+      let r = 1, g = 1, b = 1;
       r = domainMin.r + r * (domainMax.r - domainMin.r);
       g = domainMin.g + g * (domainMax.g - domainMin.g);
       b = domainMin.b + b * (domainMax.b - domainMin.b);
-      r = clamp(r);
-      g = clamp(g);
-      b = clamp(b);
-      // to grid
+      r = clamp(r); g = clamp(g); b = clamp(b);
       const lr = r * (size - 1),
         lg = g * (size - 1),
         lb = b * (size - 1);
@@ -244,12 +230,10 @@ class LUTProcessor {
       const rf = lr - r0,
         gf = lg - g0,
         bf = lb - b0;
-
       const idx = (ri, gi, bi) =>
         order === 'bSlowest'
           ? bi * size * size + gi * size + ri
           : ri * size * size + gi * size + bi;
-
       const c000 = data[idx(r0, g0, b0)];
       const c001 = data[idx(r0, g0, b1)];
       const c010 = data[idx(r0, g1, b0)];
@@ -258,13 +242,11 @@ class LUTProcessor {
       const c101 = data[idx(r1, g0, b1)];
       const c110 = data[idx(r1, g1, b0)];
       const c111 = data[idx(r1, g1, b1)];
-
       const lerp = (a, b, t) => ({
         r: a.r + t * (b.r - a.r),
         g: a.g + t * (b.g - a.g),
         b: a.b + t * (b.b - a.b),
       });
-
       const c00 = lerp(c000, c001, bf);
       const c01 = lerp(c010, c011, bf);
       const c10 = lerp(c100, c101, bf);
@@ -272,25 +254,24 @@ class LUTProcessor {
       const c0 = lerp(c00, c01, gf);
       const c1 = lerp(c10, c11, gf);
       const out = lerp(c0, c1, rf);
-
-      // error from perfect white
       return Math.abs(out.r - 1) + Math.abs(out.g - 1) + Math.abs(out.b - 1);
     };
-
     const errB = sampleErr('bSlowest');
     const errR = sampleErr('rSlowest');
     this.axisOrder = errR < errB ? 'rSlowest' : 'bSlowest';
   }
 
-  updateProcessButton() {
-    const btn = document.getElementById('processBtn');
-    if (btn) btn.disabled = !(this.hasValidImage && this.hasValidLUT);
+  updateProcessButtons() {
+    const applyBtn = document.getElementById('applyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const canApply = this.hasValidImage && this.hasValidLUT;
+    if (applyBtn) applyBtn.disabled = !canApply;
+    if (downloadBtn) downloadBtn.disabled = !this.resultReady;
   }
 
   async processImage() {
     if (!this.hasValidImage || !this.hasValidLUT) return;
     document.getElementById('progressContainer').style.display = 'block';
-
     try {
       const img = await this.loadImage(this.imageFile);
       this.canvas.width = img.width;
@@ -308,7 +289,8 @@ class LUTProcessor {
       document
         .getElementById('resultSection')
         .scrollIntoView({ behavior: 'smooth' });
-      this.downloadImage();
+      this.resultReady = true;
+      this.updateProcessButtons();
     } catch (err) {
       this.showError('error processing image: ' + err.message);
     } finally {
@@ -332,33 +314,25 @@ class LUTProcessor {
     const d = imageData.data;
     const { size, data: lutData, domainMin, domainMax } = this.lutData;
     const clamp = (v) => Math.max(0, Math.min(1, v));
-
     const idxFn = (ri, gi, bi) =>
       this.axisOrder === 'bSlowest'
         ? bi * size * size + gi * size + ri
         : ri * size * size + gi * size + bi;
-
     const lerp = (a, b, t) => ({
       r: a.r + t * (b.r - a.r),
       g: a.g + t * (b.g - a.g),
       b: a.b + t * (b.b - a.b),
     });
-
     for (let i = 0; i < d.length; i += 4) {
-      // normalize pixel
       let r = d[i] / 255;
       let g = d[i + 1] / 255;
       let b = d[i + 2] / 255;
-
-      // domain remap
       r = domainMin.r + r * (domainMax.r - domainMin.r);
       g = domainMin.g + g * (domainMax.g - domainMin.g);
       b = domainMin.b + b * (domainMax.b - domainMin.b);
       r = clamp(r);
       g = clamp(g);
       b = clamp(b);
-
-      // to grid coords
       const lr = r * (size - 1),
         lg = g * (size - 1),
         lb = b * (size - 1);
@@ -371,8 +345,6 @@ class LUTProcessor {
       const rf = lr - r0,
         gf = lg - g0,
         bf = lb - b0;
-
-      // sample corners
       const c000 = lutData[idxFn(r0, g0, b0)];
       const c001 = lutData[idxFn(r0, g0, b1)];
       const c010 = lutData[idxFn(r0, g1, b0)];
@@ -381,8 +353,6 @@ class LUTProcessor {
       const c101 = lutData[idxFn(r1, g0, b1)];
       const c110 = lutData[idxFn(r1, g1, b0)];
       const c111 = lutData[idxFn(r1, g1, b1)];
-
-      // trilinear interp
       const c00 = lerp(c000, c001, bf);
       const c01 = lerp(c010, c011, bf);
       const c10 = lerp(c100, c101, bf);
@@ -390,15 +360,14 @@ class LUTProcessor {
       const c0 = lerp(c00, c01, gf);
       const c1 = lerp(c10, c11, gf);
       const out = lerp(c0, c1, rf);
-
       d[i] = Math.round(out.r * 255);
       d[i + 1] = Math.round(out.g * 255);
       d[i + 2] = Math.round(out.b * 255);
-      // alpha unchanged
     }
   }
 
   downloadImage() {
+    if (!this.resultReady) return;
     const link = document.createElement('a');
     link.download = `lut_processed_${Date.now()}.png`;
     link.href = this.canvas.toDataURL();
@@ -413,7 +382,7 @@ class LUTProcessor {
 
   showHelp() {
     alert(`
-lut studio help:
+luthor help:
 
 🎨 theme options:
 • light mode: clean light interface
@@ -423,8 +392,8 @@ lut studio help:
 📁 how to use:
 1. upload an image (jpeg, png, webp)
 2. upload a .cube lut file
-3. click "apply lut & download"
-4. your processed image will download
+3. click "apply"
+4. click "download" to save your processed image
 
 🎞️ about luts:
 lut (look-up table) files contain color grading data.
@@ -432,9 +401,6 @@ lut (look-up table) files contain color grading data.
   }
 }
 
-// ------------------------------
-// initialize on dom ready
-// ------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   new ThemeManager();
   new LUTProcessor();
