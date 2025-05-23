@@ -25,6 +25,16 @@
 5. click **apply lut & download**
 6. your color-graded image will be downloaded automatically
 
+---   
+
+## usage (on android)
+1. **clone or download this repo**
+2. setup an simple web server so your browser can run it locally, i suggest (https://play.google.com/store/apps/details?id=com.phlox.simpleserver) 
+3. upload an image (jpeg, png, webp)
+4. upload a `.cube` lut file
+5. click **apply lut & download**
+6. your color-graded image will be downloaded automatically
+
 ---
 
 ## screenshots
