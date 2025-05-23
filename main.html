@@ -23,10 +23,9 @@
             <span class="material-symbols-outlined app-icon">palette</span>
             <div class="app-title">
               <h1>luthor</h1>
-              <p>color grading for your images</p>
+              <p>professional color grading for your images</p>
             </div>
           </div>
-          
           <!-- Theme Toggle -->
           <div class="theme-toggle-container">
             <div class="theme-toggle" id="themeToggle">
@@ -59,7 +58,6 @@
                   <p>jpeg, png, webp supported</p>
                 </div>
               </div>
-              
               <div class="upload-area" id="imageUploadArea">
                 <input
                   type="file"
@@ -74,7 +72,6 @@
                   <span class="upload-text">choose image file</span>
                 </label>
               </div>
-              
               <div class="preview-container" id="imagePreview"></div>
             </div>
 
@@ -87,7 +84,6 @@
                   <p>.cube format required</p>
                 </div>
               </div>
-              
               <div class="upload-area" id="lutUploadArea">
                 <input
                   type="file"
@@ -102,7 +98,6 @@
                   <span class="upload-text">choose .cube file</span>
                 </label>
               </div>
-              
               <div class="lut-info" id="lutInfo"></div>
             </div>
           </div>
@@ -114,14 +109,16 @@
                 <h3>color grading</h3>
                 <p>apply your lut to transform the image colors</p>
               </div>
-              
               <div class="process-actions">
-                <button id="processBtn" class="btn-primary" disabled>
+                <button id="applyBtn" class="btn-primary" disabled>
                   <span class="material-symbols-outlined">auto_fix_high</span>
-                  apply lut & download
+                  apply
+                </button>
+                <button id="downloadBtn" class="btn-primary" disabled>
+                  <span class="material-symbols-outlined">download</span>
+                  download
                 </button>
               </div>
-              
               <div class="progress-container" id="progressContainer">
                 <div class="progress-track">
                   <div class="progress-indicator" id="progressIndicator"></div>
@@ -154,7 +151,6 @@
         <span class="material-symbols-outlined">help</span>
       </button>
     </div>
-
     <script src="imagestuff.js"></script>
   </body>
 </html>
